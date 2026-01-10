@@ -1,0 +1,113 @@
+/* ===== APP LAYOUT ===== */
+.app {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding-top: 80px;
+}
+
+.app.dark {
+  background: #111;
+  color: white;
+}
+
+/* ===== CARD ===== */
+.card {
+  background: white;
+  max-width: 500px;
+  margin: auto;
+  padding: 30px;
+  border-radius: 10px;
+}
+
+.app.dark .card {
+  background: #222;
+}
+
+/* ===== TOP BAR ===== */
+.top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+/* ===== ADD TODO ===== */
+.add {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  outline: none;
+}
+
+/* ===== FILTER BUTTONS (All / Done / Pending) ===== */
+.filters {
+  display: flex;
+  background: #e5e7eb;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 20px 0;
+  gap: 5px;
+}
+
+.app.dark .filters {
+  background: #333;
+}
+
+.filters button {
+  flex: 1;
+  border: none;
+  padding: 10px 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+  color: #374151;
+}
+
+.app.dark .filters button {
+  color: #ddd;
+}
+
+.filters button:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.app.dark .filters button:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.filters .active {
+  background: white;
+  color: black;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.app.dark .filters .active {
+  background: #555;
+  color: white;
+}
+
+/* ===== TODO ITEMS ===== */
+.todo {
+  background: #eee;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  border-radius: 5px;
+}
+
+.app.dark .todo {
+  background: #333;
+}
+
+.todo.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
