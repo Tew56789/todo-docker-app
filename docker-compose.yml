@@ -1,16 +1,38 @@
-
 services:
   backend:
     build: ./backend
+    container_name: todo-backend
     ports:
       - "5000:5000"
     volumes:
       - ./backend:/app
       - ./backend/data:/app/data
-    command: npm run dev
+    command: npm run dev   # สำหรับ Development
+    working_dir: /app
 
-  frontend:
-    build: ./frontend
+  # ----------------------------
+  # Development frontend
+  # ----------------------------
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: todo-frontend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    command: npm start
+    working_dir: /app
+    depends_on:
+      - backend
+
+  # ----------------------------
+  # Production frontend
+  # ----------------------------
+  frontend-prod:
+    build: ./frontend     # ใช้ Dockerfile ปกติ (multi-stage + Nginx)
+    container_name: todo-frontend-prod
     ports:
       - "80:80"
     depends_on:
