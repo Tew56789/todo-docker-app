@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import "./App.css"
 
-const API = "http://localhost:5000"
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
 
 function App() {
   const [todos, setTodos] = useState([])
@@ -58,7 +58,6 @@ function App() {
   return (
     <div className={dark ? "dark app" : "app"}>
       <div className="card">
-
         <div className="top">
           <h2>Todo App</h2>
           <button onClick={() => setDark(!dark)}>
@@ -72,16 +71,10 @@ function App() {
         </div>
 
         <div className="filters">
-  <button onClick={() => setFilter("all")} className={filter==="all"?"active":""}>
-    📋 All
-  </button>
-  <button onClick={() => setFilter("done")} className={filter==="done"?"active":""}>
-    ✅ Done
-  </button>
-  <button onClick={() => setFilter("pending")} className={filter==="pending"?"active":""}>
-    ⏳ Pending
-  </button>
-</div>
+          <button onClick={() => setFilter("all")} className={filter==="all"?"active":""}>📋 All</button>
+          <button onClick={() => setFilter("done")} className={filter==="done"?"active":""}>✅ Done</button>
+          <button onClick={() => setFilter("pending")} className={filter==="pending"?"active":""}>⏳ Pending</button>
+        </div>
 
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="todos">
@@ -96,7 +89,9 @@ function App() {
                         {...p.dragHandleProps}
                         className={t.completed ? "todo done" : "todo"}
                       >
-                        <span onClick={() => toggleTodo(t.id)}>{t.completed ? "✅" : "⬜"} {t.title}</span>
+                        <span onClick={() => toggleTodo(t.id)}>
+                          {t.completed ? "✅" : "⬜"} {t.title}
+                        </span>
                         <button onClick={() => deleteTodo(t.id)}>❌</button>
                       </div>
                     )}
