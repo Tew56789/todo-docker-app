@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   backend:
     build: ./backend
@@ -7,13 +9,10 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/data:/app/data
-    command: npm run dev   # สำหรับ Development
+    command: npm run dev
     working_dir: /app
 
-  # ----------------------------
-  # Development frontend
-  # ----------------------------
-  frontend-dev:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
@@ -24,16 +23,5 @@ services:
       - ./frontend:/app
     command: npm start
     working_dir: /app
-    depends_on:
-      - backend
-
-  # ----------------------------
-  # Production frontend
-  # ----------------------------
-  frontend-prod:
-    build: ./frontend     # ใช้ Dockerfile ปกติ (multi-stage + Nginx)
-    container_name: todo-frontend-prod
-    ports:
-      - "80:80"
     depends_on:
       - backend
