@@ -3,17 +3,22 @@ import cors from "cors"
 import { readTodos, saveTodos } from "./storage.js"
 
 const app = express()
+
 app.use(cors())
 app.use(express.json())
 
+// =======================
+// ✅ API routes (มี /api)
+// =======================
+
 // GET all
-app.get("/todos", async (req, res) => {
+app.get("/api/todos", async (req, res) => {
   const todos = await readTodos()
   res.json(todos)
 })
 
 // ADD
-app.post("/todos", async (req, res) => {
+app.post("/api/todos", async (req, res) => {
   const todos = await readTodos()
 
   const newTodo = {
@@ -29,7 +34,7 @@ app.post("/todos", async (req, res) => {
 })
 
 // TOGGLE
-app.put("/todos/:id", async (req, res) => {
+app.put("/api/todos/:id", async (req, res) => {
   const todos = await readTodos()
 
   const updated = todos.map(t =>
@@ -41,7 +46,7 @@ app.put("/todos/:id", async (req, res) => {
 })
 
 // DELETE
-app.delete("/todos/:id", async (req, res) => {
+app.delete("/api/todos/:id", async (req, res) => {
   const todos = await readTodos()
   const filtered = todos.filter(t => t.id != req.params.id)
 
@@ -49,4 +54,10 @@ app.delete("/todos/:id", async (req, res) => {
   res.json({ success: true })
 })
 
-app.listen(5000, () => console.log("Backend running on 5000"))
+// =======================
+// ✅ ใช้ PORT จาก Render
+// =======================
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () =>
+  console.log("Backend running on port", PORT)
+)

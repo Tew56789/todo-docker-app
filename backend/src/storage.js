@@ -1,12 +1,15 @@
 import fs from "fs/promises"
+import path from "path"
 
-const FILE = "./data/todos.json"
+// ชี้ไปที่ backend/data/todos.json แบบชัวร์
+const FILE = path.join(process.cwd(), "backend", "data", "todos.json")
 
 export async function readTodos() {
   try {
     const data = await fs.readFile(FILE, "utf-8")
     return JSON.parse(data)
-  } catch {
+  } catch (err) {
+    console.error("readTodos error:", err)
     return []
   }
 }

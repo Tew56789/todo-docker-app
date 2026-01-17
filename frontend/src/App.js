@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import "./App.css"
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000"
+// ✅ ใช้ relative path (สำคัญมากบน Render)
+const API = "/api"
 
 function App() {
   const [todos, setTodos] = useState([])
@@ -66,7 +67,11 @@ function App() {
         </div>
 
         <div className="add">
-          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="New task..." />
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="New task..."
+          />
           <button onClick={addTodo}>Add</button>
         </div>
 
