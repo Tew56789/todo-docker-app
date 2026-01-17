@@ -2,11 +2,18 @@ FROM node:18
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --production
+# Backend
+COPY backend/package*.json backend/
+RUN cd backend && npm install
 
-COPY . .
+# Frontend
+COPY frontend/package*.json frontend/
+RUN cd frontend && npm install && npm run build
 
-EXPOSE 5000
+# Copy source
+COPY backend backend
+COPY frontend/build frontend/build
 
-CMD ["node", "index.js"]
+EXPOSE 10000
+
+CMD ["node", "backend/src/index.js"]
