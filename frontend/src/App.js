@@ -1,142 +1,141 @@
 import { useEffect, useState } from "react"
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import "./App.css"
 
-const API = "/api"
+const API = "https://todo-backend-app-5q02.onrender.com/api"
 
 function App() {
   const [todos, setTodos] = useState([])
   const [title, setTitle] = useState("")
-  const [filter, setFilter] = useState("all")
-  const [dark, setDark] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editingTitle, setEditingTitle] = useState("")
 
-  // ======================
-  // โหลด todo จาก backend
-  // ======================
+  // โหลด todos
   const loadTodos = async () => {
-    try {
-      const res = await fetch(`${API}/todos`)
-      const data = await res.json()
-      setTodos(Array.isArray(data) ? data : [])
-    } catch (err) {
-      console.error("Load todos failed:", err)
-    }
+    const res = await fetch(`${API}/todos`)
+    const data = await res.json()
+    setTodos(Array.isArray(data) ? data : [])
   }
 
   useEffect(() => {
     loadTodos()
   }, [])
 
-  // ======================
-  // ✅ ADD (วิธีที่ดีที่สุด)
-  // ======================
+  // เพิ่ม todo
   const addTodo = async () => {
     if (!title.trim()) return
 
-    try {
-      await fetch(`${API}/todos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title })
-      })
+    const res = await fetch(`${API}/todos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title })
+    })
 
-      setTitle("")
-      loadTodos() // ⭐ สำคัญมาก
-    } catch (err) {
-      console.error("Add todo failed:", err)
-    }
+    const newTodo = await res.json()
+    setTodos(prev => [newTodo, ...prev])
+    setTitle("")
   }
 
-  // ======================
-  // TOGGLE
-  // ======================
-  const toggleTodo = async (id) => {
-    await fetch(`${API}/todos/${id}`, { method: "PUT" })
-    loadTodos()
-  }
-
-  // ======================
-  // DELETE
-  // ======================
-  const deleteTodo = async (id) => {
-    await fetch(`${API}/todos/${id}`, { method: "DELETE" })
-    loadTodos()
-  }
-
-  // ======================
-  // DRAG
-  // ======================
-  const onDragEnd = (result) => {
-    if (!result.destination) return
-    const items = Array.from(todos)
-    const [moved] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, moved)
-    setTodos(items)
-  }
-
-  // ======================
-  // FILTER
-  // ======================
-  const filteredTodos = todos.filter(t => {
-    if (filter === "done") return t.completed
-    if (filter === "pending") return !t.completed
-    return true
+  // สลับสถานะ
+  const toggleTodo = async (todo) => {
+  await fetch(`${API}/todos/${todo.id}`, {
+    method: "PUT"
   })
 
-  return (
-    <div className={dark ? "dark app" : "app"}>
-      <div className="card">
+  setTodos(prev =>
+    prev.map(t =>
+      t.id === todo.id ? { ...t, completed: !t.completed } : t
+    )
+  )
+}
 
-        <div className="top">
-          <h2>Todo App</h2>
-          <button onClick={() => setDark(!dark)}>
-            {dark ? "☀️ Light" : "🌙 Dark"}
-          </button>
-        </div>
+
+  // แก้ไขชื่อ
+  const saveEdit = async (todo) => {
+    if (!editingTitle.trim()) {
+      setEditingId(null)
+      return
+    }
+
+    await fetch(`${API}/todos/${todo.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: editingTitle })
+    })
+
+    setEditingId(null)
+    loadTodos()
+  }
+
+  // ❌ ลบ todo
+  const deleteTodo = async (id) => {
+    await fetch(`${API}/todos/${id}`, {
+      method: "DELETE"
+    })
+    loadTodos()
+  }
+
+  // รายการแต่ละอัน
+  const TodoItem = ({ todo }) => (
+    <div className={`todo ${todo.completed ? "done" : ""}`}>
+      <div className="left">
+        {editingId === todo.id ? (
+          <input
+            autoFocus
+            value={editingTitle}
+            onChange={e => setEditingTitle(e.target.value)}
+            onBlur={() => saveEdit(todo)}
+            onKeyDown={e => {
+              if (e.key === "Enter") saveEdit(todo)
+              if (e.key === "Escape") setEditingId(null)
+            }}
+          />
+        ) : (
+          <span
+            onClick={() => toggleTodo(todo)}
+            onDoubleClick={() => {
+              setEditingId(todo.id)
+              setEditingTitle(todo.title)
+            }}
+          >
+            {todo.completed ? "✅" : "⬜"} {todo.title}
+          </span>
+        )}
+      </div>
+
+      <button
+        className="delete"
+        onClick={() => deleteTodo(todo.id)}
+        title="ลบ"
+      >
+        🗑️
+      </button>
+    </div>
+  )
+
+  const pending = todos.filter(t => !t.completed)
+  const done = todos.filter(t => t.completed)
+
+  return (
+    <div className="app">
+      <div className="card">
+        <h2>📝 Todo App</h2>
 
         <div className="add">
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="New task..."
-            onKeyDown={e => e.key === "Enter" && addTodo()}
+            placeholder="เพิ่มงานใหม่..."
           />
           <button onClick={addTodo}>Add</button>
         </div>
 
-        <div className="filters">
-          <button onClick={() => setFilter("all")} className={filter==="all"?"active":""}>📋 All</button>
-          <button onClick={() => setFilter("done")} className={filter==="done"?"active":""}>✅ Done</button>
-          <button onClick={() => setFilter("pending")} className={filter==="pending"?"active":""}>⏳ Pending</button>
-        </div>
+        <h3>⏳ ยังไม่ทำ</h3>
+        {pending.length === 0 && <p className="empty">ไม่มีงานค้าง</p>}
+        {pending.map(t => <TodoItem key={t.id} todo={t} />)}
 
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="todos">
-            {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
-                {filteredTodos.map((t, i) => (
-                  <Draggable key={t.id} draggableId={String(t.id)} index={i}>
-                    {(p) => (
-                      <div
-                        ref={p.innerRef}
-                        {...p.draggableProps}
-                        {...p.dragHandleProps}
-                        className={t.completed ? "todo done" : "todo"}
-                      >
-                        <span onClick={() => toggleTodo(t.id)}>
-                          {t.completed ? "✅" : "⬜"} {t.title}
-                        </span>
-                        <button onClick={() => deleteTodo(t.id)}>❌</button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-
+        <h3>🎉 ทำแล้ว</h3>
+        {done.length === 0 && <p className="empty">ยังไม่มีงานที่เสร็จ</p>}
+        {done.map(t => <TodoItem key={t.id} todo={t} />)}
       </div>
     </div>
   )
