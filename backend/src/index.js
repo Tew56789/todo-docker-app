@@ -8,56 +8,82 @@ app.use(cors())
 app.use(express.json())
 
 // =======================
-// ✅ API routes (มี /api)
+// ✅ API routes (/api)
 // =======================
 
-// GET all
+// GET all todos
 app.get("/api/todos", async (req, res) => {
-  const todos = await readTodos()
-  res.json(todos)
-})
-
-// ADD
-app.post("/api/todos", async (req, res) => {
-  const todos = await readTodos()
-
-  const newTodo = {
-    id: Date.now(),
-    title: req.body.title,
-    completed: false
+  try {
+    const todos = await readTodos()
+    res.json(Array.isArray(todos) ? todos : [])
+  } catch (err) {
+    res.status(500).json({ error: "Cannot read todos" })
   }
-
-  todos.unshift(newTodo)
-  await saveTodos(todos)
-
-  res.json(newTodo)
 })
 
-// TOGGLE
+// ADD todo
+app.post("/api/todos", async (req, res) => {
+  try {
+    const { title } = req.body
+
+    // ✅ กันข้อมูลว่าง
+    if (!title || title.trim() === "") {
+      return res.status(400).json({ error: "Title is required" })
+    }
+
+    const todos = await readTodos()
+
+    const newTodo = {
+      id: Date.now(),          // number (ตรงกับ frontend)
+      title: title.trim(),
+      completed: false
+    }
+
+    todos.unshift(newTodo)
+    await saveTodos(todos)
+
+    // ✅ ส่ง todo กลับไปให้ frontend ใช้ setState
+    res.status(201).json(newTodo)
+  } catch (err) {
+    res.status(500).json({ error: "Cannot add todo" })
+  }
+})
+
+// TOGGLE completed
 app.put("/api/todos/:id", async (req, res) => {
-  const todos = await readTodos()
+  try {
+    const todos = await readTodos()
 
-  const updated = todos.map(t =>
-    t.id == req.params.id ? { ...t, completed: !t.completed } : t
-  )
+    const updated = todos.map(t =>
+      String(t.id) === req.params.id
+        ? { ...t, completed: !t.completed }
+        : t
+    )
 
-  await saveTodos(updated)
-  res.json({ success: true })
+    await saveTodos(updated)
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: "Cannot update todo" })
+  }
 })
 
-// DELETE
+// DELETE todo
 app.delete("/api/todos/:id", async (req, res) => {
-  const todos = await readTodos()
-  const filtered = todos.filter(t => t.id != req.params.id)
+  try {
+    const todos = await readTodos()
+    const filtered = todos.filter(t => String(t.id) !== req.params.id)
 
-  await saveTodos(filtered)
-  res.json({ success: true })
+    await saveTodos(filtered)
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: "Cannot delete todo" })
+  }
 })
 
 // =======================
-// ✅ ใช้ PORT จาก Render
+// ✅ Render / Docker PORT
 // =======================
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () =>
+app.listen(PORT, () => {
   console.log("Backend running on port", PORT)
-)
+})

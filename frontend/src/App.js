@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import "./App.css"
 
-// ✅ ใช้ relative path (สำคัญมากบน Render)
 const API = "/api"
 
 function App() {
@@ -12,9 +11,15 @@ function App() {
   const [dark, setDark] = useState(false)
 
   const loadTodos = async () => {
-    const res = await fetch(`${API}/todos`)
-    const data = await res.json()
-    setTodos(data)
+    try {
+      const res = await fetch(`${API}/todos`)
+      const data = await res.json()
+
+      // ✅ ป้องกันกรณี backend ไม่ได้ส่ง array มา
+      setTodos(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error("Load todos failed:", err)
+    }
   }
 
   useEffect(() => {
@@ -22,14 +27,23 @@ function App() {
   }, [])
 
   const addTodo = async () => {
-    if (!title) return
-    await fetch(`${API}/todos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title })
-    })
-    setTitle("")
-    loadTodos()
+    if (!title.trim()) return
+
+    try {
+      const res = await fetch(`${API}/todos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title })
+      })
+
+      const newTodo = await res.json()
+
+      // ✅ เพิ่ม todo ใหม่เข้า state ทันที (ไม่ต้องรอ fetch ใหม่)
+      setTodos(prev => [...prev, newTodo])
+      setTitle("")
+    } catch (err) {
+      console.error("Add todo failed:", err)
+    }
   }
 
   const toggleTodo = async (id) => {
@@ -39,7 +53,7 @@ function App() {
 
   const deleteTodo = async (id) => {
     await fetch(`${API}/todos/${id}`, { method: "DELETE" })
-    loadTodos()
+    setTodos(prev => prev.filter(t => t.id !== id))
   }
 
   const onDragEnd = (result) => {
@@ -84,9 +98,9 @@ function App() {
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="todos">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef}>
+              <div ref={provided.innerRef} {...provided.droppableProps}>
                 {filteredTodos.map((t, i) => (
-                  <Draggable key={t.id} draggableId={t.id.toString()} index={i}>
+                  <Draggable key={t.id} draggableId={String(t.id)} index={i}>
                     {(p) => (
                       <div
                         ref={p.innerRef}
