@@ -10,12 +10,13 @@ function App() {
   const [filter, setFilter] = useState("all")
   const [dark, setDark] = useState(false)
 
+  // ======================
+  // โหลด todo จาก backend
+  // ======================
   const loadTodos = async () => {
     try {
       const res = await fetch(`${API}/todos`)
       const data = await res.json()
-
-      // ✅ ป้องกันกรณี backend ไม่ได้ส่ง array มา
       setTodos(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error("Load todos failed:", err)
@@ -26,36 +27,45 @@ function App() {
     loadTodos()
   }, [])
 
+  // ======================
+  // ✅ ADD (วิธีที่ดีที่สุด)
+  // ======================
   const addTodo = async () => {
     if (!title.trim()) return
 
     try {
-      const res = await fetch(`${API}/todos`, {
+      await fetch(`${API}/todos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title })
       })
 
-      const newTodo = await res.json()
-
-      // ✅ เพิ่ม todo ใหม่เข้า state ทันที (ไม่ต้องรอ fetch ใหม่)
-      setTodos(prev => [...prev, newTodo])
       setTitle("")
+      loadTodos() // ⭐ สำคัญมาก
     } catch (err) {
       console.error("Add todo failed:", err)
     }
   }
 
+  // ======================
+  // TOGGLE
+  // ======================
   const toggleTodo = async (id) => {
     await fetch(`${API}/todos/${id}`, { method: "PUT" })
     loadTodos()
   }
 
+  // ======================
+  // DELETE
+  // ======================
   const deleteTodo = async (id) => {
     await fetch(`${API}/todos/${id}`, { method: "DELETE" })
-    setTodos(prev => prev.filter(t => t.id !== id))
+    loadTodos()
   }
 
+  // ======================
+  // DRAG
+  // ======================
   const onDragEnd = (result) => {
     if (!result.destination) return
     const items = Array.from(todos)
@@ -64,6 +74,9 @@ function App() {
     setTodos(items)
   }
 
+  // ======================
+  // FILTER
+  // ======================
   const filteredTodos = todos.filter(t => {
     if (filter === "done") return t.completed
     if (filter === "pending") return !t.completed
@@ -73,6 +86,7 @@ function App() {
   return (
     <div className={dark ? "dark app" : "app"}>
       <div className="card">
+
         <div className="top">
           <h2>Todo App</h2>
           <button onClick={() => setDark(!dark)}>
@@ -85,6 +99,7 @@ function App() {
             value={title}
             onChange={e => setTitle(e.target.value)}
             placeholder="New task..."
+            onKeyDown={e => e.key === "Enter" && addTodo()}
           />
           <button onClick={addTodo}>Add</button>
         </div>
