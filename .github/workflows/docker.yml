@@ -1,28 +1,56 @@
-name: Build and Push Docker Images
+name: CI for Frontend & Backend
 
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build:
+  backend:
+    name: Backend CI
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: backend
+
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Login DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-    - name: Build & Push Backend
-      run: |
-        docker build -t tew56789/todo-backend ./backend
-        docker push tew56789/todo-backend
+      - name: Install backend dependencies
+        run: npm install
 
-    - name: Build & Push Frontend
-      run: |
-        docker build -t tew56789/todo-frontend ./frontend
-        docker push tew56789/todo-frontend
+      - name: Run backend (syntax check)
+        run: node src/index.js
+        env:
+          PORT: 5001
+
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
